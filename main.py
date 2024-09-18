@@ -1,52 +1,49 @@
-from db_connection import get_connection
+import psycopg2
 
-conn = get_connection()
+# Database connection function
+def get_db_connection():
+    try:
+        conn = psycopg2.connect(
+            dbname="ekadeli",
+            user="ekadeli",
+            password="ekadeli",
+            host="localhost"
+        )
+        return conn
+    except Exception as error:
+        print(f"Error connecting to the database: {error}")
+        return None
 
-def add_venue():
-    if conn is not None:
-        cur = conn.cursor()
-        cur.execute('''
-            INSERT INTO venue(city, title)
-            VALUES (%s, %s)
-        ''', ("Nairobi", "Cinemax"))
+# Testing the classes
+from band import Band
+from venue import Venue
+from concert import Concert
 
-        conn.commit()
+if __name__ == "__main__":
+    conn = get_db_connection()
 
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    # Test creating a band and retrieving data
+    band = Band.find_by_id(1, conn)
+    if band:
+        print(f"Band: {band.name}, Hometown: {band.hometown}")
+        print("Concerts:", band.concerts(conn))
+        print("Venues:", band.venues(conn))
 
-def add_band():
-    if conn is not None:
+    # Test creating a venue and retrieving data
+    venue = Venue.find_by_id(1, conn)
+    if venue:
+        print(f"Venue: {venue.title}, City: {venue.city}")
+        print("Concerts:", venue.concerts(conn))
+        print("Bands:", venue.bands(conn))
 
-        cur = conn.cursor()
-        cur.execute('''
-            INSERT INTO band(name, hometown)
-            VALUES (%s, %s)
-        ''', ("SAUTI SOL", "Nairobi"))
-        print("added successfully")
+    # Test creating a concert and retrieving data
+    concert = Concert.find_by_id(1, conn)
+    if concert:
+        print(f"Concert on {concert.date}")
+        print(f"Band: {concert.band(conn).name}")
+        print(f"Venue: {concert.venue(conn).title}")
+        print(f"Hometown Show: {concert.hometown_show(conn)}")
+        print(f"Introduction: {concert.introduction(conn)}")
 
-        conn.commit()
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-
-
-def add_concert():
-    if conn is not None:
-
-        cur = conn.cursor()
-        cur.execute('''
-            INSERT INTO concert(concert_name, date, venue_id, band_id)
-            VALUES (%s, %s, %s, %s)
-        ''', ("KAMBA FESTIVAL", "28-09-2015", 1, 1))
-        print("added successfully")
-
-        conn.commit()
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    if conn:
+        conn.close()  # Close connection when done
